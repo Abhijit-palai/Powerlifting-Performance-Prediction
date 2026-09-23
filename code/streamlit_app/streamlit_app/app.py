@@ -1,14 +1,26 @@
+
 """
 Powerlifting Deadlift Predictor — Home / Prediction page.
 Run locally with:  streamlit run app.py
 """
-
+ 
+from pathlib import Path
+ 
 import joblib
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-
+ 
+# ----------------------------------------------------------------------
+# Resolve paths relative to THIS file, not the current working directory.
+# Streamlit Cloud does not guarantee the working directory is this
+# script's own folder, so a bare "final_model.pkl" can silently fail
+# while running "streamlit run app.py" from inside this folder locally
+# works by coincidence. Anchoring to __file__ fixes it in both places.
+# ----------------------------------------------------------------------
+APP_DIR = Path(__file__).resolve().parent
+ 
 # ----------------------------------------------------------------------
 # Page config (must be the first Streamlit call)
 # ----------------------------------------------------------------------
@@ -18,7 +30,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
+ 
 # ----------------------------------------------------------------------
 # Shared style — one small CSS block reused by every page
 # ----------------------------------------------------------------------
@@ -26,7 +38,7 @@ CUSTOM_CSS = """
 <style>
     .main > div {padding-top: 1.5rem;}
     #MainMenu, footer {visibility: hidden;}
-
+ 
     .app-title {
         font-size: 2.1rem;
         font-weight: 700;
@@ -76,31 +88,31 @@ CUSTOM_CSS = """
 </style>
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-
-
+ 
+ 
 # ----------------------------------------------------------------------
 # Cached loaders — the model and reference sample load once per session
 # ----------------------------------------------------------------------
 @st.cache_resource
 def load_model():
-    return joblib.load("final_model.pkl")
-
-
+    return joblib.load(APP_DIR / "final_model.pkl")
+ 
+ 
 @st.cache_data
 def load_reference_data():
-    return pd.read_csv("lifting_data_sample.csv")
-
-
+    return pd.read_csv(APP_DIR / "lifting_data_sample.csv")
+ 
+ 
 model = load_model()
 ref_data = load_reference_data()
-
+ 
 # ----------------------------------------------------------------------
 # Sidebar — inputs live here so the main area is fully devoted to results
 # ----------------------------------------------------------------------
 with st.sidebar:
     st.markdown("### 🏋️ Lifter Details")
     st.caption("Enter today's squat and bench results to estimate the deadlift.")
-
+ 
     sex = st.radio("Sex", ["M", "F"], horizontal=True)
     equipment = st.selectbox(
         "Equipment", ["Raw", "Wraps", "Single-ply", "Multi-ply"],
@@ -109,10 +121,10 @@ with st.sidebar:
     bodyweight = st.number_input("Bodyweight (kg)", min_value=30.0, max_value=250.0, value=80.0, step=0.5)
     squat = st.number_input("Best Squat (kg)", min_value=0.0, max_value=500.0, value=150.0, step=2.5)
     bench = st.number_input("Best Bench (kg)", min_value=0.0, max_value=350.0, value=100.0, step=2.5)
-
+ 
     st.markdown("---")
     predict_clicked = st.button("Predict Deadlift", type="primary", use_container_width=True)
-
+ 
 # ----------------------------------------------------------------------
 # Main area
 # ----------------------------------------------------------------------
@@ -122,7 +134,7 @@ st.markdown(
     'bench, bodyweight, sex and equipment — powered by a tuned XGBoost model.</div>',
     unsafe_allow_html=True,
 )
-
+ 
 if not predict_clicked:
     st.info("Fill in the details on the left and click **Predict Deadlift** to see a result.")
     st.markdown("#### What this model uses")
@@ -147,9 +159,9 @@ else:
         }]
     )
     prediction = float(model.predict(input_row)[0])
-
+ 
     left, right = st.columns([1, 1.4])
-
+ 
     with left:
         st.markdown(
             f"""
@@ -165,7 +177,7 @@ else:
             "Typical prediction error for this model is about ±14.9 kg (MAE on test data) — "
             "treat this as an informed estimate, not an exact figure."
         )
-
+ 
         # percentile vs similar lifters (same sex + equipment) in the reference sample
         peer_group = ref_data[(ref_data["Sex"] == sex) & (ref_data["Equipment"] == equipment)]
         if len(peer_group) > 20:
@@ -175,7 +187,7 @@ else:
                 f"{percentile:.0f}th",
                 help=f"Based on {len(peer_group):,} similar lifters in the reference dataset.",
             )
-
+ 
     with right:
         # gauge chart against the peer group's typical range
         if len(peer_group) > 20:
@@ -184,7 +196,7 @@ else:
         else:
             p10, p50, p90 = 0, ref_data["BestDeadliftKg"].median(), ref_data["BestDeadliftKg"].quantile(0.9)
             gauge_max = max(p90 * 1.15, prediction * 1.1)
-
+ 
         fig = go.Figure(
             go.Indicator(
                 mode="gauge+number",
@@ -210,9 +222,10 @@ else:
         )
         fig.update_layout(height=320, margin=dict(l=20, r=20, t=60, b=10))
         st.plotly_chart(fig, use_container_width=True)
-
+ 
     st.markdown("---")
     st.caption(
         "See the **Visualizations** page to explore the full dataset, or **Model Insights** "
         "for how this model was chosen and how accurate it is."
     )
+ 
