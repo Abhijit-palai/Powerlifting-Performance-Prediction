@@ -1,0 +1,13 @@
+Model,Test R2,MAE,RMSE
+Extra Trees,0.8804,14.92,20.22
+XGBoost,0.8803,14.93,20.22
+Random Forest,0.8802,14.91,20.23
+HistGradientBoosting,0.8786,15.04,20.37
+Gradient Boosting,0.876,15.2,20.59
+KNN Regressor,0.8604,16.24,21.84
+Ridge,0.8573,16.32,22.08
+Linear Regression,0.8573,16.32,22.08
+Lasso,0.855,16.47,22.26
+Decision Tree,0.8539,15.99,22.34
+ElasticNet,0.8023,20.14,25.99
+AdaBoost,0.6372,26.28,35.21
