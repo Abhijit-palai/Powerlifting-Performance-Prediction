@@ -1,11 +1,15 @@
 """Model Insights page — how the model was chosen and how good it is."""
 
 import json
+from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+
+# pages/ is one level below the main app folder, where the data files live
+APP_DIR = Path(__file__).resolve().parent.parent
 
 st.set_page_config(page_title="Model Insights", page_icon="🧠", layout="wide")
 
@@ -27,11 +31,11 @@ st.markdown(
 
 @st.cache_data
 def load_artifacts():
-    with open("metrics.json") as f:
+    with open(APP_DIR / "metrics.json") as f:
         metrics = json.load(f)
-    comparison = pd.read_csv("model_comparison.csv")
-    importance = pd.read_csv("feature_importance.csv")
-    actual_vs_pred = pd.read_csv("actual_vs_predicted_sample.csv")
+    comparison = pd.read_csv(APP_DIR / "model_comparison.csv")
+    importance = pd.read_csv(APP_DIR / "feature_importance.csv")
+    actual_vs_pred = pd.read_csv(APP_DIR / "actual_vs_predicted_sample.csv")
     return metrics, comparison, importance, actual_vs_pred
 
 
@@ -116,3 +120,4 @@ with c2:
     scatter.update_layout(height=380, margin=dict(l=10, r=10, t=10, b=10), xaxis_title="Actual (kg)", yaxis_title="Predicted (kg)", showlegend=False)
     st.plotly_chart(scatter, use_container_width=True)
     st.caption("Points close to the dashed line are accurate predictions; the spread shows typical error.")
+    

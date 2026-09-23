@@ -1,8 +1,13 @@
 """Visualizations page — explore the dataset behind the model."""
 
+from pathlib import Path
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+
+# pages/ is one level below the main app folder, where the data files live
+APP_DIR = Path(__file__).resolve().parent.parent
 
 st.set_page_config(page_title="Visualizations", page_icon="📊", layout="wide")
 
@@ -21,7 +26,7 @@ st.markdown(
 
 @st.cache_data
 def load_data():
-    return pd.read_csv("lifting_data_sample.csv")
+    return pd.read_csv(APP_DIR / "lifting_data_sample.csv")
 
 
 df = load_data()
