@@ -1,4 +1,7 @@
-Data
+Data/
+model/
+PL-env
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
